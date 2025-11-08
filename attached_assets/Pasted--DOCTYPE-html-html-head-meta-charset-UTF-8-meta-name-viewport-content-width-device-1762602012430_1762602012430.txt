@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privy NFT Mint</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.privy.io/sdk/latest/privy-sdk.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(30, 30, 30, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(255, 102, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      text-align: center;
+      background: linear-gradient(135deg, #ff6600, #ff9944);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .wallet-section { margin-bottom: 30px; }
+    .wallet-address {
+      background: rgba(255, 102, 0, 0.1);
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+      margin-top: 10px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 25px 0;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff6600;
+    }
+    .progress-section { margin: 25px 0; }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .progress-container {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #ff6600, #ff9944);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+    }
+    .mint-section { margin: 25px 0; }
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .quantity-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quantity-btn:hover:enabled {
+      background: rgba(255, 102, 0, 0.2);
+      border-color: #ff6600;
+    }
+    .quantity-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .quantity-display {
+      font-size: 32px;
+      font-weight: bold;
+      min-width: 60px;
+      text-align: center;
+      color: #ff6600;
+    }
+    button.primary {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #ff6600, #ff4500);
+      color: #fff;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+    }
+    button.primary:hover:enabled {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+    }
+    button.primary:disabled {
+      background: #555;
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
+    }
+    .status-message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+    .status-message.success {
+      background: rgba(0, 255, 100, 0.1);
+      border: 1px solid rgba(0, 255, 100, 0.3);
+      color: #00ff64;
+      display: block;
+    }
+    .status-message.error {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      color: #ff5555;
+      display: block;
+    }
+    .status-message.info {
+      background: rgba(100, 150, 255, 0.1);
+      border: 1px solid rgba(100, 150, 255, 0.3);
+      color: #6496ff;
+      display: block;
+    }
+    .nft-links {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .nft-links a {
+      color: #ff6600;
+      text-decoration: none;
+      margin: 0 5px;
+      font-weight: 500;
+    }
+    .nft-links a:hover {
+      text-decoration: underline;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @media (max-width: 500px) {
+      .container { padding: 25px; }
+      h1 { font-size: 24px; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 NFT Mint</h1>
+    <p class="subtitle">Mint your exclusive NFT collection</p>
+
+    <div class="wallet-section">
+      <button id="connectBtn" class="primary">Connect Wallet</button>
+      <div id="walletAddress" class="wallet-address" style="display: none;"></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Supply</div>
+        <div class="stat-value" id="totalSupply">Loading...</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Your Mints</div>
+        <div class="stat-value" id="userMints">-</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <span>Minting Progress</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <div class="mint-section" id="mintSection" style="display: none;">
+      <div class="quantity-selector">
+        <button class="quantity-btn" id="decreaseBtn">−</button>
+        <div class="quantity-display" id="quantityDisplay">1</div>
+        <button class="quantity-btn" id="increaseBtn">+</button>
+      </div>
+      <button id="mintBtn" class="primary">Mint NFT</button>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+    <div id="nftLinks" class="nft-links"></div>
+  </div>
+
+  <script>
+    const CONTRACT_ADDRESS = "0x7d5C48A82E13168d84498548fe0a2282b9C1F16B";
+    const CONTRACT_ABI = [
+      {"inputs":[{"internalType":"address","name":"minter","type":"address"}],"name":"getMintStats","outputs":[{"internalType":"uint256","name":"minterNumMinted","type":"uint256"},{"internalType":"uint256","name":"currentTotalSupply","type":"uint256"},{"internalType":"uint256","name":"maxSupply","type":"uint256"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+      {"inputs":[{"internalType":"address","name":"minter","type":"address"},{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mintSeaDrop","outputs":[],"stateMutability":"nonpayable","type":"function"},
+      {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"}
+    ];
+    const PRIVY_APP_ID = "cmhk5aqsf00r2k10d4m81x9ax";
+    const HYPEREVM_RPC = "https://api.hyperliquid.xyz/evm";
+    const HYPEREVM_CHAIN_ID = 998; // HyperEVM chain ID
+    const OPENSEA_URL = `https://opensea.io/assets/ethereum/${CONTRACT_ADDRESS}/`;
+
+    let privy, signer, contract, userAddress;
+    let quantity = 1;
+    let maxRemaining = 0;
+    let readOnlyContract;
+
+    // Initialize immediately
+    (async function init() {
+      try {
+        console.log("Starting initialization...");
+        
+        // Create read-only contract for HyperEVM
+        const provider = new ethers.providers.JsonRpcProvider(HYPEREVM_RPC);
+        readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        console.log("Read-only contract created for HyperEVM");
+        
+        // Load initial supply data
+        await updateSupplyData();
+        
+        // Initialize Privy
+        if (typeof Privy !== 'undefined') {
+          privy = new Privy({ 
+            apiKey: PRIVY_APP_ID
+          });
+          console.log("Privy initialized");
+        } else {
+          console.error("Privy SDK not loaded");
+        }
+      } catch (err) {
+        console.error("Init error:", err);
+        document.getElementById("totalSupply").innerText = "Error";
+      }
+    })();
+
+    // Update supply data using getMintStats
+    async function updateSupplyData() {
+      try {
+        const contractToUse = contract || readOnlyContract;
+        if (!contractToUse) {
+          console.log("No contract available");
+          return;
+        }
+
+        console.log("Fetching supply data from HyperEVM...");
+        
+        // Use getMintStats with zero address to get total supply
+        const zeroAddress = "0x0000000000000000000000000000000000000000";
+        const stats = await contractToUse.getMintStats(zeroAddress);
+        
+        const totalNum = parseInt(stats.currentTotalSupply.toString());
+        const maxNum = parseInt(stats.maxSupply.toString());
+        
+        console.log("Total supply:", totalNum, "Max supply:", maxNum);
+        
+        document.getElementById("totalSupply").innerText = `${totalNum} / ${maxNum}`;
+        
+        const progressPercent = Math.min(100, (totalNum / maxNum) * 100);
+        document.getElementById("progressBar").style.width = progressPercent + "%";
+        document.getElementById("progressPercent").innerText = progressPercent.toFixed(1) + "%";
+
+        maxRemaining = Math.max(0, maxNum - totalNum);
+
+        if (totalNum >= maxNum) {
+          document.getElementById("mintBtn").disabled = true;
+        }
+      } catch (err) {
+        console.error("Supply update error:", err);
+        document.getElementById("totalSupply").innerText = "Error";
+      }
+    }
+
+    // Update user-specific data
+    async function updateUserData() {
+      if (!contract || !userAddress) return;
+      
+      try {
+        const stats = await contract.getMintStats(userAddress);
+        const userMinted = parseInt(stats.minterNumMinted.toString());
+        document.getElementById("userMints").innerText = userMinted;
+      } catch (err) {
+        console.error("User data error:", err);
+      }
+    }
+
+    // Connect Wallet to HyperEVM
+    document.getElementById("connectBtn").onclick = async () => {
+      try {
+        if (!privy) {
+          showStatus("Wallet provider not ready. Please refresh.", "error");
+          return;
+        }
+
+        showStatus("Connecting wallet...", "info");
+        
+        // Sign in with Privy
+        const user = await privy.auth.signIn();
+        
+        // Get ethereum provider from Privy
+        const privyProvider = privy.ethereum;
+        
+        // Switch to HyperEVM chain
+        try {
+          await privyProvider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x' + HYPEREVM_CHAIN_ID.toString(16) }],
+          });
+        } catch (switchError) {
+          // Chain not added, try to add it
+          if (switchError.code === 4902) {
+            await privyProvider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x' + HYPEREVM_CHAIN_ID.toString(16),
+                chainName: 'HyperEVM',
+                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                rpcUrls: [HYPEREVM_RPC],
+              }],
+            });
+          } else {
+            throw switchError;
+          }
+        }
+        
+        userAddress = user.address;
+        const web3Provider = new ethers.providers.Web3Provider(privyProvider);
+        signer = web3Provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        document.getElementById("walletAddress").innerText = 
+          `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+        document.getElementById("walletAddress").style.display = "block";
+        document.getElementById("connectBtn").innerText = "Connected ✓";
+        document.getElementById("connectBtn").disabled = true;
+        document.getElementById("mintSection").style.display = "block";
+
+        await updateSupplyData();
+        await updateUserData();
+        updateQuantityButtons();
+        
+        showStatus("Wallet connected to HyperEVM!", "success");
+        setTimeout(() => hideStatus(), 3000);
+      } catch (err) {
+        console.error("Connection error:", err);
+        showStatus(`Connection failed: ${err.message || 'Unknown error'}`, "error");
+      }
+    };
+
+    // Quantity controls
+    function updateQuantityButtons() {
+      document.getElementById("quantityDisplay").innerText = quantity;
+      document.getElementById("decreaseBtn").disabled = quantity <= 1;
+      document.getElementById("increaseBtn").disabled = quantity >= maxRemaining || quantity >= 10;
+    }
+
+    document.getElementById("decreaseBtn").onclick = () => {
+      if (quantity > 1) {
+        quantity--;
+        updateQuantityButtons();
+      }
+    };
+
+    document.getElementById("increaseBtn").onclick = () => {
+      if (quantity < maxRemaining && quantity < 10) {
+        quantity++;
+        updateQuantityButtons();
+      }
+    };
+
+    // Mint function
+    document.getElementById("mintBtn").onclick = async () => {
+      if (!contract) {
+        showStatus("Please connect your wallet first", "error");
+        return;
+      }
+
+      try {
+        const btn = document.getElementById("mintBtn");
+        btn.disabled = true;
+        btn.innerHTML = 'Minting<span class="spinner"></span>';
+        
+        showStatus(`Minting ${quantity} NFT${quantity > 1 ? 's' : ''}...`, "info");
+
+        const tx = await contract.mintSeaDrop(userAddress, quantity);
+        showStatus("Transaction submitted! Waiting for confirmation...", "info");
+        
+        const receipt = await tx.wait();
+        
+        const tokenIds = [];
+        if (receipt.events) {
+          receipt.events.forEach(event => {
+            if (event.event === "Transfer" && event.args && event.args.to.toLowerCase() === userAddress.toLowerCase()) {
+              tokenIds.push(event.args.tokenId.toString());
+            }
+          });
+        }
+
+        showStatus(`Successfully minted ${quantity} NFT${quantity > 1 ? 's' : ''}!`, "success");
+        
+        if (tokenIds.length > 0) {
+          const links = tokenIds.map(id => 
+            `<a href="${OPENSEA_URL}${id}" target="_blank" rel="noopener">Token #${id}</a>`
+          ).join(" • ");
+          document.getElementById("nftLinks").innerHTML = `View on OpenSea: ${links}`;
+        }
+
+        await updateSupplyData();
+        await updateUserData();
+        quantity = 1;
+        updateQuantityButtons();
+        
+        btn.disabled = false;
+        btn.innerHTML = 'Mint NFT';
+      } catch (err) {
+        console.error("Mint error:", err);
+        let errorMsg = "Mint failed";
+        
+        if (err.message && err.message.includes("user rejected")) {
+          errorMsg = "Transaction rejected by user";
+        } else if (err.message && err.message.includes("insufficient funds")) {
+          errorMsg = "Insufficient funds for transaction";
+        } else if (err.data && err.data.message) {
+          errorMsg = err.data.message;
+        } else if (err.message) {
+          errorMsg = err.message;
+        }
+        
+        showStatus(errorMsg, "error");
+        
+        const btn = document.getElementById("mintBtn");
+        btn.disabled = false;
+        btn.innerHTML = 'Mint NFT';
+      }
+    };
+
+    // Status helpers
+    function showStatus(message, type) {
+      const statusEl = document.getElementById("statusMessage");
+      statusEl.innerText = message;
+      statusEl.className = `status-message ${type}`;
+    }
+
+    function hideStatus() {
+      document.getElementById("statusMessage").className = "status-message";
+    }
+
+    // Auto-refresh every 15 seconds
+    setInterval(() => {
+      updateSupplyData();
+      if (contract && userAddress) {
+        updateUserData();
+      }
+    }, 15000);
+  </script>
+</body>
+</html>
