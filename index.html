@@ -1,218 +1,212 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HyperEVM NFT Mint</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%); color: #fff; min-height:100vh; padding:20px; display:flex; justify-content:center; align-items:center; }
-    .container { max-width:500px; width:100%; background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); border-radius:20px; padding:40px; box-shadow:0 20px 60px rgba(255,102,0,0.1); border:1px solid rgba(255,255,255,0.1); }
-    h1 { font-size:32px; margin-bottom:10px; text-align:center; background: linear-gradient(135deg,#ff6600,#ff9944); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .subtitle { text-align:center; color:#999; margin-bottom:30px; font-size:14px; }
-    .wallet-section { margin-bottom:30px; }
-    .wallet-address { background: rgba(255,102,0,0.1); border:1px solid rgba(255,102,0,0.3); border-radius:10px; padding:12px; text-align:center; font-size:14px; font-family: 'Courier New', monospace; word-break: break-all; margin-top:10px; display:none; }
-    .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:25px 0; }
-    .stat-card { background: rgba(255,255,255,0.05); border-radius:12px; padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.1); }
-    .stat-label { font-size:12px; color:#999; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
-    .stat-value { font-size:24px; font-weight:bold; color:#ff6600; }
-    .progress-section { margin:25px 0; }
-    .progress-header { display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; }
-    .progress-container { width:100%; background: rgba(255,255,255,0.1); border-radius:10px; height:12px; overflow:hidden; }
-    .progress-bar { height:100%; width:0; background: linear-gradient(90deg,#ff6600,#ff9944); transition:width 0.5s ease; box-shadow:0 0 10px rgba(255,102,0,0.5); }
-    .mint-section { margin:25px 0; display:none; }
-    .quantity-selector { display:flex; align-items:center; justify-content:center; gap:15px; margin:20px 0; }
-    .quantity-btn { width:40px; height:40px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color:#fff; font-size:20px; cursor:pointer; transition: all 0.2s; }
-    .quantity-btn:hover:enabled { background: rgba(255,102,0,0.2); border-color:#ff6600; }
-    .quantity-btn:disabled { opacity:0.3; cursor:not-allowed; }
-    .quantity-display { font-size:32px; font-weight:bold; min-width:60px; text-align:center; color:#ff6600; }
-    button.primary { width:100%; padding:16px; font-size:18px; font-weight:600; cursor:pointer; border-radius:12px; border:none; background: linear-gradient(135deg,#ff6600,#ff4500); color:#fff; transition: all 0.3s; box-shadow:0 4px 15px rgba(255,102,0,0.3); }
-    button.primary:hover:enabled { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,102,0,0.4); }
-    button.primary:disabled { background:#555; cursor:not-allowed; opacity:0.6; box-shadow:none; }
-    .status-message { margin-top:20px; padding:12px; border-radius:8px; text-align:center; font-size:14px; display:none; }
-    .status-message.success { background: rgba(0,255,100,0.1); border:1px solid rgba(0,255,100,0.3); color:#00ff64; display:block; }
-    .status-message.error { background: rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); color:#ff5555; display:block; }
-    .status-message.info { background: rgba(100,150,255,0.1); border:1px solid rgba(100,150,255,0.3); color:#6496ff; display:block; }
-    .nft-links { margin-top:15px; text-align:center; }
-    .nft-links a { color:#ff6600; text-decoration:none; margin:0 5px; font-weight:500; }
-    .nft-links a:hover { text-decoration:underline; }
-    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; margin-left:10px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    @media(max-width:500px) { .container{padding:25px;} h1{font-size:24px;} .stats-grid{grid-template-columns:1fr;} }
-    #privy-iframe-container{display:none;}
-  </style>
-</head>
-<body>
-  <div id="privy-iframe-container"></div>
-  <div class="container">
-    <h1>🎨 NFT Mint</h1>
-    <p class="subtitle">Mint your exclusive NFT on HyperEVM</p>
+import React, { useState, useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { ethers } from 'ethers';
 
-    <div class="wallet-section">
-      <button id="connectBtn" class="primary">Connect with Privy</button>
-      <div id="walletAddress" class="wallet-address"></div>
-    </div>
+const CONTRACT_ADDRESS = "0x7d5C48A82E13168d84498548fe0a2282b9C1F16B";
+const CONTRACT_ABI = [
+  {"inputs":[{"internalType":"address","name":"minter","type":"address"}],
+   "name":"getMintStats","outputs":[{"internalType":"uint256","name":"minterNumMinted","type":"uint256"},
+   {"internalType":"uint256","name":"currentTotalSupply","type":"uint256"},
+   {"internalType":"uint256","name":"maxSupply","type":"uint256"}],
+   "stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+   "stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"minter","type":"address"},{"internalType":"uint256","name":"quantity","type":"uint256"}],
+   "name":"mintSeaDrop","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[],"name":"getPublicMintPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+   "stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],
+   "name":"maxMintPerWallet","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+   "stateMutability":"view","type":"function"}
+];
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total Supply</div>
-        <div class="stat-value" id="totalSupply">Loading...</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Your Mints</div>
-        <div class="stat-value" id="userMints">-</div>
-      </div>
-    </div>
+const HYPEREVM_RPC = "https://api.hyperliquid.xyz/evm";
+const HYPEREVM_EXPLORER = "https://explorer.hyperliquid.xyz";
 
-    <div class="progress-section">
-      <div class="progress-header">
-        <span>Minting Progress</span>
-        <span id="progressPercent">0%</span>
-      </div>
-      <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-    </div>
+export default function NftMint() {
+  const { privy, isLoaded } = usePrivy();
 
-    <div class="mint-section" id="mintSection">
-      <div class="quantity-selector">
-        <button class="quantity-btn" id="decreaseBtn">−</button>
-        <div class="quantity-display" id="quantityDisplay">1</div>
-        <button class="quantity-btn" id="increaseBtn">+</button>
-      </div>
-      <div id="priceInfo" style="text-align:center; margin:15px 0; color:#ff9944; font-size:16px;">
-        Price: <span id="totalPrice">Loading...</span>
-      </div>
-      <button id="mintBtn" class="primary">Mint NFT</button>
-    </div>
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [readOnlyContract, setReadOnlyContract] = useState(null);
 
-    <div id="statusMessage" class="status-message"></div>
-    <div id="nftLinks" class="nft-links"></div>
-  </div>
+  const [userAddress, setUserAddress] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [mintPrice, setMintPrice] = useState(ethers.BigNumber.from(0));
+  const [maxPerWallet, setMaxPerWallet] = useState(10);
+  const [userMintedCount, setUserMintedCount] = useState(0);
+  const [maxRemaining, setMaxRemaining] = useState(0);
+  const [totalSupply, setTotalSupply] = useState(0);
+  const [maxSupply, setMaxSupply] = useState(0);
 
-  <script type="module">
-    import { Privy, LocalStorage } from 'https://cdn.jsdelivr.net/npm/@privy-io/js-sdk-core@latest/dist/index.mjs';
-    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js';
-    
-    window.ethers = ethers;
+  const [status, setStatus] = useState({ message: '', type: '' });
+  const [loading, setLoading] = useState(false);
+  const [txLink, setTxLink] = useState('');
 
-    const CONTRACT_ADDRESS = "0x7d5C48A82E13168d84498548fe0a2282b9C1F16B";
-    const CONTRACT_ABI = [
-      {"inputs":[{"internalType":"address","name":"minter","type":"address"}],"name":"getMintStats","outputs":[{"internalType":"uint256","name":"minterNumMinted","type":"uint256"},{"internalType":"uint256","name":"currentTotalSupply","type":"uint256"},{"internalType":"uint256","name":"maxSupply","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[{"internalType":"address","name":"minter","type":"address"},{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mintSeaDrop","outputs":[],"stateMutability":"payable","type":"function"},
-      {"inputs":[],"name":"getPublicMintPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"maxMintPerWallet","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-    ];
+  // Initialize read-only contract
+  useEffect(() => {
+    const rpcProvider = new ethers.providers.JsonRpcProvider(HYPEREVM_RPC);
+    const roContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+    setReadOnlyContract(roContract);
+    updateSupply(roContract);
+  }, []);
 
-    const PRIVY_APP_ID = "cmhk5aqsf00r2k10d4m81x9ax";
-    const HYPEREVM_RPC = "https://api.hyperliquid.xyz/evm";
-    const HYPEREVM_EXPLORER = "https://explorer.hyperliquid.xyz";
+  // Update supply data every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (readOnlyContract) updateSupply(readOnlyContract);
+      if (contract && userAddress) updateUserData();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [readOnlyContract, contract, userAddress]);
 
-    let privyClient, provider, signer, contract, userAddress;
-    let quantity = 1, maxRemaining = 0, maxPerWallet = 10, userMintedCount = 0, userMaxMint = 10, mintPrice = ethers.BigNumber.from(0);
-    let readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, new ethers.providers.JsonRpcProvider(HYPEREVM_RPC));
+  const showStatus = (msg, type) => setStatus({ message: msg, type });
+  const hideStatus = () => setStatus({ message: '', type: '' });
 
-    async function updateSupplyData() {
-      try {
-        const stats = await readOnlyContract.getMintStats("0x0000000000000000000000000000000000000000");
-        const totalNum = parseInt(stats.currentTotalSupply.toString());
-        const maxNum = parseInt(stats.maxSupply.toString());
-        document.getElementById("totalSupply").innerText = `${totalNum} / ${maxNum}`;
-        const progressPercent = Math.min(100, (totalNum / maxNum) * 100);
-        document.getElementById("progressBar").style.width = progressPercent + "%";
-        document.getElementById("progressPercent").innerText = progressPercent.toFixed(1) + "%";
-        maxRemaining = Math.max(0, maxNum - totalNum);
-      } catch(e){ console.error(e); document.getElementById("totalSupply").innerText="Error"; }
+  const updateSupply = async (contractToUse) => {
+    try {
+      const stats = await contractToUse.getMintStats(ethers.constants.AddressZero);
+      const currentTotal = parseInt(stats.currentTotalSupply.toString());
+      const maxTotal = parseInt(stats.maxSupply.toString());
+      setTotalSupply(currentTotal);
+      setMaxSupply(maxTotal);
+      setMaxRemaining(Math.max(0, maxTotal - currentTotal));
+    } catch (err) {
+      console.error("Supply update error:", err);
+      showStatus("Error fetching total supply", "error");
+    }
+  };
+
+  const updateUserData = async () => {
+    if (!contract || !userAddress) return;
+    try {
+      const stats = await contract.getMintStats(userAddress);
+      const minted = parseInt(stats.minterNumMinted.toString());
+      setUserMintedCount(minted);
+
+      const maxMint = await contract.maxMintPerWallet(userAddress);
+      setMaxPerWallet(parseInt(maxMint.toString()));
+    } catch (err) {
+      console.error("User data error:", err);
+    }
+  };
+
+  const connectWallet = async () => {
+    if (!isLoaded) {
+      showStatus("Privy not loaded. Refresh page.", "error");
+      return;
     }
 
-    function updatePriceDisplay() {
-      const totalCost = mintPrice.mul(quantity);
-      document.getElementById("totalPrice").innerText = mintPrice.isZero() ? "FREE" : `${ethers.utils.formatEther(totalCost)} ETH`;
+    try {
+      showStatus("Initializing Privy wallet...", "info");
+      const { provider: ethProvider } = await privy.embeddedWallet.create({
+        chain: { type: 'evm', chainId: '0x3E6', rpcUrl: HYPEREVM_RPC }
+      });
+
+      const ethersProvider = new ethers.providers.Web3Provider(ethProvider.provider);
+      const signer = ethersProvider.getSigner();
+      setProvider(ethersProvider);
+      setSigner(signer);
+
+      const accounts = await ethProvider.provider.request({ method: 'eth_requestAccounts' });
+      setUserAddress(accounts[0]);
+
+      const nftContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      setContract(nftContract);
+
+      // Fetch price and user data
+      const price = await nftContract.getPublicMintPrice();
+      setMintPrice(price);
+      await updateUserData();
+
+      showStatus("Wallet connected!", "success");
+      setTimeout(hideStatus, 3000);
+    } catch (err) {
+      console.error(err);
+      showStatus("Wallet connection failed: " + (err.message || "Unknown error"), "error");
     }
+  };
 
-    function updateQuantityButtons() {
-      document.getElementById("quantityDisplay").innerText = quantity;
-      document.getElementById("decreaseBtn").disabled = quantity <= 1;
-      const maxAllowed = Math.min(maxRemaining, userMaxMint || maxPerWallet);
-      document.getElementById("increaseBtn").disabled = quantity >= maxAllowed;
-      updatePriceDisplay();
+  const mintNFT = async () => {
+    if (!contract || !userAddress) {
+      showStatus("Connect wallet first", "error");
+      return;
     }
-
-    function showStatus(msg, type) {
-      const el = document.getElementById("statusMessage");
-      el.innerText = msg;
-      el.className = `status-message ${type}`;
+    setLoading(true);
+    showStatus(`Minting ${quantity} NFT(s)...`, "info");
+    try {
+      const tx = await contract.mintSeaDrop(userAddress, quantity, { value: mintPrice.mul(quantity) });
+      const receipt = await tx.wait();
+      setTxLink(`${HYPEREVM_EXPLORER}/tx/${receipt.transactionHash}`);
+      showStatus(`Successfully minted ${quantity} NFT(s)!`, "success");
+      setQuantity(1);
+      await updateSupply(contract);
+      await updateUserData();
+    } catch (err) {
+      console.error(err);
+      showStatus("Mint failed: " + (err.message || "Unknown error"), "error");
     }
+    setLoading(false);
+  };
 
-    function hideStatus() { document.getElementById("statusMessage").className = "status-message"; }
+  const increaseQuantity = () => {
+    const maxAllowed = Math.min(maxRemaining, maxPerWallet - userMintedCount);
+    if (quantity < maxAllowed) setQuantity(quantity + 1);
+  };
+  const decreaseQuantity = () => {
+    if (quantity > 1) setQuantity(quantity - 1);
+  };
 
-    document.getElementById("connectBtn").onclick = async () => {
-      try {
-        privyClient = new Privy({ appId: PRIVY_APP_ID, storage: new LocalStorage(), customChains: [{ type:'evm', chainId:'0x3E6', name:'HyperEVM', network:'hyperevm', nativeCurrency:{name:'Ethereum',symbol:'ETH',decimals:18}, rpcUrl:HYPEREVM_RPC, blockExplorerUrl:HYPEREVM_EXPLORER }] });
-        const iframeUrl = await privyClient.embeddedWallet.getURL();
-        const iframe = document.createElement('iframe');
-        iframe.src = iframeUrl; iframe.style.border='none'; iframe.style.position='absolute'; iframe.style.width='0'; iframe.style.height='0';
-        document.getElementById('privy-iframe-container').appendChild(iframe);
-        privyClient.setMessagePoster(iframe.contentWindow);
-        window.addEventListener('message', e=>privyClient.embeddedWallet.onMessage(e.data));
+  const formattedPrice = mintPrice.isZero() ? "FREE" : `${ethers.utils.formatEther(mintPrice.mul(quantity))} ETH`;
+  const progressPercent = maxSupply > 0 ? (totalSupply / maxSupply) * 100 : 0;
 
-        const email = prompt("Enter your email address:");
-        if(!email) return;
-        await privyClient.auth.email.sendCode(email);
-        const code = prompt("Enter the code sent to your email:");
-        if(!code) return;
-        const {user} = await privyClient.auth.email.loginWithCode(email, code);
+  return (
+    <div style={{ maxWidth: 500, margin: 'auto', padding: 20, color: '#fff', fontFamily: 'Inter' }}>
+      <h1>🎨 NFT Mint</h1>
+      <p>{userAddress ? `Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}` : 'Connect your wallet to mint'}</p>
+      {!userAddress && <button onClick={connectWallet}>Connect Wallet</button>}
 
-        showStatus("Creating wallet...", "info");
-        const {provider: ethProvider} = await privyClient.embeddedWallet.create({ chain:{ type:'evm', chainId:'0x3E6', rpcUrl:HYPEREVM_RPC } });
-        const accounts = await ethProvider.request({ method:'eth_requestAccounts' });
-        userAddress = accounts[0];
+      <div style={{ marginTop: 20 }}>
+        <div>Total Supply: {totalSupply} / {maxSupply}</div>
+        <div>Your Mints: {userMintedCount} / {maxPerWallet}</div>
+        <div style={{ marginTop: 10, background: '#333', borderRadius: 10, height: 12, overflow: 'hidden' }}>
+          <div style={{ width: `${progressPercent}%`, height: '100%', background: '#ff6600' }} />
+        </div>
+      </div>
 
-        provider = new ethers.providers.Web3Provider(ethProvider);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      {userAddress && (
+        <div style={{ marginTop: 20 }}>
+          <div>
+            <button onClick={decreaseQuantity} disabled={quantity<=1}>−</button>
+            <span style={{ margin: '0 15px', fontSize: 20 }}>{quantity}</span>
+            <button onClick={increaseQuantity} disabled={quantity >= Math.min(maxRemaining, maxPerWallet - userMintedCount)}>+</button>
+          </div>
+          <div style={{ marginTop: 10 }}>Price: {formattedPrice}</div>
+          <button onClick={mintNFT} disabled={loading} style={{ marginTop: 15 }}>
+            {loading ? 'Minting...' : 'Mint NFT'}
+          </button>
+          {txLink && <div style={{ marginTop: 10 }}><a href={txLink} target="_blank" rel="noopener noreferrer">View Transaction</a></div>}
+        </div>
+      )}
 
-        document.getElementById("walletAddress").innerText = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-        document.getElementById("walletAddress").style.display = "block";
-        document.getElementById("connectBtn").innerText = "Connected ✓";
-        document.getElementById("connectBtn").disabled = true;
-        document.getElementById("mintSection").style.display = "block";
+      {status.message && (
+        <div style={{
+          marginTop: 20,
+          padding: 12,
+          borderRadius: 8,
+          textAlign: 'center',
+          background: status.type==='success' ? 'rgba(0,255,100,0.1)' : status.type==='error' ? 'rgba(255,0,0,0.1)' : 'rgba(100,150,255,0.1)',
+          border: `1px solid ${status.type==='success' ? 'rgba(0,255,100,0.3)' : status.type==='error' ? 'rgba(255,0,0,0.3)' : 'rgba(100,150,255,0.3)'}`,
+          color: status.type==='success' ? '#00ff64' : status.type==='error' ? '#ff5555' : '#6496ff'
+        }}>
+          {status.message}
+        </div>
+      )}
 
-        // Fetch mint price & max per wallet
-        try { mintPrice = await contract.getPublicMintPrice(); } catch(e){ mintPrice = ethers.BigNumber.from(0); }
-        try { maxPerWallet = parseInt((await contract.maxMintPerWallet(userAddress)).toString()); } catch(e){ maxPerWallet=10; }
-        userMaxMint = maxPerWallet;
-
-        await updateSupplyData();
-        updateQuantityButtons();
-        showStatus("Wallet connected!", "success");
-        setTimeout(hideStatus,3000);
-      } catch(e){ console.error(e); showStatus("Connection failed: "+e.message,"error"); }
-    };
-
-    document.getElementById("decreaseBtn").onclick = () => { if(quantity>1){quantity--; updateQuantityButtons();} };
-    document.getElementById("increaseBtn").onclick = () => { const maxAllowed=Math.min(maxRemaining,userMaxMint||maxPerWallet); if(quantity<maxAllowed){quantity++; updateQuantityButtons();} };
-
-    document.getElementById("mintBtn").onclick = async () => {
-      if(!contract) { showStatus("Connect wallet first","error"); return; }
-      try {
-        const btn = document.getElementById("mintBtn"); btn.disabled=true; btn.innerHTML='Minting<span class="spinner"></span>';
-        const totalCost = mintPrice.mul(quantity);
-        const tx = await contract.mintSeaDrop(userAddress, quantity, { value: totalCost });
-        showStatus("Transaction submitted...","info");
-        const receipt = await tx.wait();
-        showStatus(`Successfully minted ${quantity} NFT${quantity>1?'s':''}!`,"success");
-        if(receipt.transactionHash){ const explorerLink = `${HYPEREVM_EXPLORER}/tx/${receipt.transactionHash}`;
-          document.getElementById("nftLinks").innerHTML = `<a href="${explorerLink}" target="_blank">View on Explorer</a>`;}
-        quantity=1; updateQuantityButtons(); btn.disabled=false; btn.innerHTML='Mint NFT';
-        await updateSupplyData();
-      } catch(e){ console.error(e); showStatus("Mint failed: "+(e.message||"Unknown"),"error");
-        const btn=document.getElementById("mintBtn"); btn.disabled=false; btn.innerHTML='Mint NFT';
-      }
-    };
-
-    setInterval(updateSupplyData,15000);
-  </script>
-</body>
-</html>
+      <div id="privy-iframe-container" style={{ marginTop: 20, minHeight: 600 }}>
+        {/* Privy embedded wallet iframe appears here */}
+      </div>
+    </div>
+  );
+}
