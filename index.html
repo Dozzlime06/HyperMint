@@ -6,226 +6,51 @@
   <title>HyperEVM NFT Mint</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
-      color: #fff;
-      min-height: 100vh;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .container {
-      max-width: 500px;
-      width: 100%;
-      background: rgba(30, 30, 30, 0.8);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(255, 102, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
-      text-align: center;
-      background: linear-gradient(135deg, #ff6600, #ff9944);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .subtitle {
-      text-align: center;
-      color: #999;
-      margin-bottom: 30px;
-      font-size: 14px;
-    }
-    .wallet-section { margin-bottom: 30px; }
-    .wallet-address {
-      background: rgba(255, 102, 0, 0.1);
-      border: 1px solid rgba(255, 102, 0, 0.3);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-      font-size: 14px;
-      font-family: 'Courier New', monospace;
-      word-break: break-all;
-      margin-top: 10px;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin: 25px 0;
-    }
-    .stat-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .stat-label {
-      font-size: 12px;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    .stat-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #ff6600;
-    }
-    .progress-section { margin: 25px 0; }
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-    .progress-container {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      height: 12px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, #ff6600, #ff9944);
-      transition: width 0.5s ease;
-      box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
-    }
-    .mint-section { margin: 25px 0; }
-    .quantity-selector {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      margin: 20px 0;
-    }
-    .quantity-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .quantity-btn:hover:enabled {
-      background: rgba(255, 102, 0, 0.2);
-      border-color: #ff6600;
-    }
-    .quantity-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-    .quantity-display {
-      font-size: 32px;
-      font-weight: bold;
-      min-width: 60px;
-      text-align: center;
-      color: #ff6600;
-    }
-    button.primary {
-      width: 100%;
-      padding: 16px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 12px;
-      border: none;
-      background: linear-gradient(135deg, #ff6600, #ff4500);
-      color: #fff;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-    }
-    button.primary:hover:enabled {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-    }
-    button.primary:disabled {
-      background: #555;
-      cursor: not-allowed;
-      opacity: 0.6;
-      box-shadow: none;
-    }
-    .status-message {
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 14px;
-      display: none;
-    }
-    .status-message.success {
-      background: rgba(0, 255, 100, 0.1);
-      border: 1px solid rgba(0, 255, 100, 0.3);
-      color: #00ff64;
-      display: block;
-    }
-    .status-message.error {
-      background: rgba(255, 0, 0, 0.1);
-      border: 1px solid rgba(255, 0, 0, 0.3);
-      color: #ff5555;
-      display: block;
-    }
-    .status-message.info {
-      background: rgba(100, 150, 255, 0.1);
-      border: 1px solid rgba(100, 150, 255, 0.3);
-      color: #6496ff;
-      display: block;
-    }
-    .nft-links {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .nft-links a {
-      color: #ff6600;
-      text-decoration: none;
-      margin: 0 5px;
-      font-weight: 500;
-    }
-    .nft-links a:hover {
-      text-decoration: underline;
-    }
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-left: 10px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    @media (max-width: 500px) {
-      .container { padding: 25px; }
-      h1 { font-size: 24px; }
-      .stats-grid { grid-template-columns: 1fr; }
-    }
-    #privy-iframe-container { display: none; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%); color: #fff; min-height:100vh; padding:20px; display:flex; justify-content:center; align-items:center; }
+    .container { max-width:500px; width:100%; background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); border-radius:20px; padding:40px; box-shadow:0 20px 60px rgba(255,102,0,0.1); border:1px solid rgba(255,255,255,0.1); }
+    h1 { font-size:32px; margin-bottom:10px; text-align:center; background: linear-gradient(135deg,#ff6600,#ff9944); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .subtitle { text-align:center; color:#999; margin-bottom:30px; font-size:14px; }
+    .wallet-section { margin-bottom:30px; }
+    .wallet-address { background: rgba(255,102,0,0.1); border:1px solid rgba(255,102,0,0.3); border-radius:10px; padding:12px; text-align:center; font-size:14px; font-family: 'Courier New', monospace; word-break: break-all; margin-top:10px; display:none; }
+    .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:25px 0; }
+    .stat-card { background: rgba(255,255,255,0.05); border-radius:12px; padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.1); }
+    .stat-label { font-size:12px; color:#999; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+    .stat-value { font-size:24px; font-weight:bold; color:#ff6600; }
+    .progress-section { margin:25px 0; }
+    .progress-header { display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; }
+    .progress-container { width:100%; background: rgba(255,255,255,0.1); border-radius:10px; height:12px; overflow:hidden; }
+    .progress-bar { height:100%; width:0; background: linear-gradient(90deg,#ff6600,#ff9944); transition:width 0.5s ease; box-shadow:0 0 10px rgba(255,102,0,0.5); }
+    .mint-section { margin:25px 0; display:none; }
+    .quantity-selector { display:flex; align-items:center; justify-content:center; gap:15px; margin:20px 0; }
+    .quantity-btn { width:40px; height:40px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color:#fff; font-size:20px; cursor:pointer; transition: all 0.2s; }
+    .quantity-btn:hover:enabled { background: rgba(255,102,0,0.2); border-color:#ff6600; }
+    .quantity-btn:disabled { opacity:0.3; cursor:not-allowed; }
+    .quantity-display { font-size:32px; font-weight:bold; min-width:60px; text-align:center; color:#ff6600; }
+    button.primary { width:100%; padding:16px; font-size:18px; font-weight:600; cursor:pointer; border-radius:12px; border:none; background: linear-gradient(135deg,#ff6600,#ff4500); color:#fff; transition: all 0.3s; box-shadow:0 4px 15px rgba(255,102,0,0.3); }
+    button.primary:hover:enabled { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,102,0,0.4); }
+    button.primary:disabled { background:#555; cursor:not-allowed; opacity:0.6; box-shadow:none; }
+    .status-message { margin-top:20px; padding:12px; border-radius:8px; text-align:center; font-size:14px; display:none; }
+    .status-message.success { background: rgba(0,255,100,0.1); border:1px solid rgba(0,255,100,0.3); color:#00ff64; display:block; }
+    .status-message.error { background: rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); color:#ff5555; display:block; }
+    .status-message.info { background: rgba(100,150,255,0.1); border:1px solid rgba(100,150,255,0.3); color:#6496ff; display:block; }
+    .nft-links { margin-top:15px; text-align:center; }
+    .nft-links a { color:#ff6600; text-decoration:none; margin:0 5px; font-weight:500; }
+    .nft-links a:hover { text-decoration:underline; }
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; margin-left:10px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media(max-width:500px) { .container{padding:25px;} h1{font-size:24px;} .stats-grid{grid-template-columns:1fr;} }
+    #privy-iframe-container{display:none;}
   </style>
 </head>
 <body>
   <div id="privy-iframe-container"></div>
-  
   <div class="container">
     <h1>🎨 NFT Mint</h1>
     <p class="subtitle">Mint your exclusive NFT on HyperEVM</p>
 
     <div class="wallet-section">
       <button id="connectBtn" class="primary">Connect with Privy</button>
-      <div id="walletAddress" class="wallet-address" style="display: none;"></div>
+      <div id="walletAddress" class="wallet-address"></div>
     </div>
 
     <div class="stats-grid">
@@ -249,13 +74,13 @@
       </div>
     </div>
 
-    <div class="mint-section" id="mintSection" style="display: none;">
+    <div class="mint-section" id="mintSection">
       <div class="quantity-selector">
         <button class="quantity-btn" id="decreaseBtn">−</button>
         <div class="quantity-display" id="quantityDisplay">1</div>
         <button class="quantity-btn" id="increaseBtn">+</button>
       </div>
-      <div id="priceInfo" style="text-align: center; margin: 15px 0; color: #ff9944; font-size: 16px;">
+      <div id="priceInfo" style="text-align:center; margin:15px 0; color:#ff9944; font-size:16px;">
         Price: <span id="totalPrice">Loading...</span>
       </div>
       <button id="mintBtn" class="primary">Mint NFT</button>
@@ -277,354 +102,117 @@
       {"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
       {"inputs":[{"internalType":"address","name":"minter","type":"address"},{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"mintSeaDrop","outputs":[],"stateMutability":"payable","type":"function"},
       {"inputs":[],"name":"getPublicMintPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"maxMintPerWallet","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"Transfer","type":"event"}
+      {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"maxMintPerWallet","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
     ];
-    
+
     const PRIVY_APP_ID = "cmhk5aqsf00r2k10d4m81x9ax";
     const HYPEREVM_RPC = "https://api.hyperliquid.xyz/evm";
-    const HYPEREVM_CHAIN_ID = 998;
     const HYPEREVM_EXPLORER = "https://explorer.hyperliquid.xyz";
 
     let privyClient, provider, signer, contract, userAddress;
-    let quantity = 1;
-    let maxRemaining = 0;
-    let maxPerWallet = 10;
-    let userMintedCount = 0;
-    let userMaxMint = 10;
-    let mintPrice = ethers.BigNumber.from(0);
-    let readOnlyContract;
-
-    (async function init() {
-      try {
-        console.log("Starting initialization...");
-        
-        const rpcProvider = new ethers.providers.JsonRpcProvider(HYPEREVM_RPC);
-        readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
-        console.log("Read-only contract created for HyperEVM");
-        
-        await updateSupplyData();
-        await fetchContractConfig();
-        
-        privyClient = new Privy({
-          appId: PRIVY_APP_ID,
-          storage: new LocalStorage(),
-          customChains: [
-            {
-              type: 'evm',
-              chainId: '0x3E6',
-              name: 'HyperEVM',
-              network: 'hyperevm',
-              nativeCurrency: {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                decimals: 18
-              },
-              rpcUrl: HYPEREVM_RPC,
-              blockExplorerUrl: HYPEREVM_EXPLORER
-            }
-          ]
-        });
-        
-        const iframeUrl = await privyClient.embeddedWallet.getURL();
-        const iframe = document.createElement('iframe');
-        iframe.src = iframeUrl;
-        iframe.style.border = 'none';
-        iframe.style.position = 'absolute';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        document.getElementById('privy-iframe-container').appendChild(iframe);
-        
-        privyClient.setMessagePoster(iframe.contentWindow);
-        const listener = (e) => privyClient.embeddedWallet.onMessage(e.data);
-        window.addEventListener('message', listener);
-        
-        console.log("Privy initialized successfully with HyperEVM");
-      } catch (err) {
-        console.error("Init error:", err);
-        document.getElementById("totalSupply").innerText = "Error";
-        showStatus("Initialization failed: " + err.message, "error");
-      }
-    })();
+    let quantity = 1, maxRemaining = 0, maxPerWallet = 10, userMintedCount = 0, userMaxMint = 10, mintPrice = ethers.BigNumber.from(0);
+    let readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, new ethers.providers.JsonRpcProvider(HYPEREVM_RPC));
 
     async function updateSupplyData() {
       try {
-        const contractToUse = contract || readOnlyContract;
-        if (!contractToUse) {
-          console.log("No contract available");
-          return;
-        }
-
-        console.log("Fetching supply data from HyperEVM...");
-        
-        const zeroAddress = "0x0000000000000000000000000000000000000000";
-        const stats = await contractToUse.getMintStats(zeroAddress);
-        
+        const stats = await readOnlyContract.getMintStats("0x0000000000000000000000000000000000000000");
         const totalNum = parseInt(stats.currentTotalSupply.toString());
         const maxNum = parseInt(stats.maxSupply.toString());
-        
-        console.log("Total supply:", totalNum, "Max supply:", maxNum);
-        
         document.getElementById("totalSupply").innerText = `${totalNum} / ${maxNum}`;
-        
         const progressPercent = Math.min(100, (totalNum / maxNum) * 100);
         document.getElementById("progressBar").style.width = progressPercent + "%";
         document.getElementById("progressPercent").innerText = progressPercent.toFixed(1) + "%";
-
         maxRemaining = Math.max(0, maxNum - totalNum);
-
-        if (totalNum >= maxNum) {
-          const mintBtn = document.getElementById("mintBtn");
-          if (mintBtn) mintBtn.disabled = true;
-        }
-      } catch (err) {
-        console.error("Supply update error:", err);
-        document.getElementById("totalSupply").innerText = "Error";
-      }
-    }
-
-    async function fetchContractConfig() {
-      try {
-        const contractToUse = contract || readOnlyContract;
-        if (!contractToUse) return;
-        
-        try {
-          mintPrice = await contractToUse.getPublicMintPrice();
-          console.log("Mint price from contract:", ethers.utils.formatEther(mintPrice), "ETH");
-        } catch (err) {
-          console.log("getPublicMintPrice not available, using free mint");
-          mintPrice = ethers.BigNumber.from(0);
-        }
-        
-        if (userAddress) {
-          try {
-            const maxMint = await contractToUse.maxMintPerWallet(userAddress);
-            maxPerWallet = parseInt(maxMint.toString());
-            console.log("Max mint per wallet from contract:", maxPerWallet);
-          } catch (err) {
-            console.log("maxMintPerWallet not available, using default (10)");
-            maxPerWallet = 10;
-          }
-        }
-        
-        updatePriceDisplay();
-      } catch (err) {
-        console.error("Contract config error:", err);
-      }
+      } catch(e){ console.error(e); document.getElementById("totalSupply").innerText="Error"; }
     }
 
     function updatePriceDisplay() {
       const totalCost = mintPrice.mul(quantity);
-      const priceText = mintPrice.isZero() 
-        ? "FREE" 
-        : `${ethers.utils.formatEther(totalCost)} ETH`;
-      document.getElementById("totalPrice").innerText = priceText;
+      document.getElementById("totalPrice").innerText = mintPrice.isZero() ? "FREE" : `${ethers.utils.formatEther(totalCost)} ETH`;
     }
 
-    async function updateUserData() {
-      if (!contract || !userAddress) return;
-      
-      try {
-        await fetchContractConfig();
-        
-        const stats = await contract.getMintStats(userAddress);
-        userMintedCount = parseInt(stats.minterNumMinted.toString());
-        userMaxMint = Math.max(0, maxPerWallet - userMintedCount);
-        
-        document.getElementById("userMints").innerText = `${userMintedCount} / ${maxPerWallet}`;
-        
-        if (userMintedCount >= maxPerWallet) {
-          showStatus(`You've reached the max mint limit (${maxPerWallet} NFTs per wallet)`, "error");
-          document.getElementById("mintBtn").disabled = true;
-        }
-      } catch (err) {
-        console.error("User data error:", err);
-        document.getElementById("userMints").innerText = userMintedCount;
-      }
+    function updateQuantityButtons() {
+      document.getElementById("quantityDisplay").innerText = quantity;
+      document.getElementById("decreaseBtn").disabled = quantity <= 1;
+      const maxAllowed = Math.min(maxRemaining, userMaxMint || maxPerWallet);
+      document.getElementById("increaseBtn").disabled = quantity >= maxAllowed;
+      updatePriceDisplay();
     }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById("statusMessage");
+      el.innerText = msg;
+      el.className = `status-message ${type}`;
+    }
+
+    function hideStatus() { document.getElementById("statusMessage").className = "status-message"; }
 
     document.getElementById("connectBtn").onclick = async () => {
       try {
-        if (!privyClient) {
-          showStatus("Wallet provider not ready. Please refresh.", "error");
-          return;
-        }
+        privyClient = new Privy({ appId: PRIVY_APP_ID, storage: new LocalStorage(), customChains: [{ type:'evm', chainId:'0x3E6', name:'HyperEVM', network:'hyperevm', nativeCurrency:{name:'Ethereum',symbol:'ETH',decimals:18}, rpcUrl:HYPEREVM_RPC, blockExplorerUrl:HYPEREVM_EXPLORER }] });
+        const iframeUrl = await privyClient.embeddedWallet.getURL();
+        const iframe = document.createElement('iframe');
+        iframe.src = iframeUrl; iframe.style.border='none'; iframe.style.position='absolute'; iframe.style.width='0'; iframe.style.height='0';
+        document.getElementById('privy-iframe-container').appendChild(iframe);
+        privyClient.setMessagePoster(iframe.contentWindow);
+        window.addEventListener('message', e=>privyClient.embeddedWallet.onMessage(e.data));
 
-        showStatus("Please check your email for the login code...", "info");
-        
         const email = prompt("Enter your email address:");
-        if (!email) return;
-        
+        if(!email) return;
         await privyClient.auth.email.sendCode(email);
-        
         const code = prompt("Enter the code sent to your email:");
-        if (!code) return;
-        
-        showStatus("Logging in...", "info");
-        const { user } = await privyClient.auth.email.loginWithCode(email, code);
-        
-        showStatus("Creating embedded wallet for HyperEVM...", "info");
-        const { provider: ethProvider, user: updatedUser } = await privyClient.embeddedWallet.create({
-          chain: {
-            type: 'evm',
-            chainId: '0x3E6',
-            rpcUrl: HYPEREVM_RPC
-          }
-        });
-        
-        try {
-          await ethProvider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x3E6' }],
-          });
-        } catch (switchError) {
-          if (switchError.code === 4902) {
-            await ethProvider.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: '0x3E6',
-                chainName: 'HyperEVM',
-                nativeCurrency: { 
-                  name: 'Ethereum', 
-                  symbol: 'ETH', 
-                  decimals: 18 
-                },
-                rpcUrls: [HYPEREVM_RPC],
-                blockExplorerUrls: [HYPEREVM_EXPLORER]
-              }],
-            });
-          }
-        }
-        
-        const accounts = await ethProvider.request({ method: 'eth_requestAccounts' });
+        if(!code) return;
+        const {user} = await privyClient.auth.email.loginWithCode(email, code);
+
+        showStatus("Creating wallet...", "info");
+        const {provider: ethProvider} = await privyClient.embeddedWallet.create({ chain:{ type:'evm', chainId:'0x3E6', rpcUrl:HYPEREVM_RPC } });
+        const accounts = await ethProvider.request({ method:'eth_requestAccounts' });
         userAddress = accounts[0];
-        console.log("User wallet address on HyperEVM:", userAddress);
-        
+
         provider = new ethers.providers.Web3Provider(ethProvider);
         signer = provider.getSigner();
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-        document.getElementById("walletAddress").innerText = 
-          `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+        document.getElementById("walletAddress").innerText = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
         document.getElementById("walletAddress").style.display = "block";
         document.getElementById("connectBtn").innerText = "Connected ✓";
         document.getElementById("connectBtn").disabled = true;
         document.getElementById("mintSection").style.display = "block";
 
+        // Fetch mint price & max per wallet
+        try { mintPrice = await contract.getPublicMintPrice(); } catch(e){ mintPrice = ethers.BigNumber.from(0); }
+        try { maxPerWallet = parseInt((await contract.maxMintPerWallet(userAddress)).toString()); } catch(e){ maxPerWallet=10; }
+        userMaxMint = maxPerWallet;
+
         await updateSupplyData();
-        await updateUserData();
         updateQuantityButtons();
-        
-        showStatus("Wallet connected to HyperEVM!", "success");
-        setTimeout(() => hideStatus(), 3000);
-      } catch (err) {
-        console.error("Connection error:", err);
-        showStatus(`Connection failed: ${err.message || 'Unknown error'}`, "error");
-      }
+        showStatus("Wallet connected!", "success");
+        setTimeout(hideStatus,3000);
+      } catch(e){ console.error(e); showStatus("Connection failed: "+e.message,"error"); }
     };
 
-    function updateQuantityButtons() {
-      document.getElementById("quantityDisplay").innerText = quantity;
-      document.getElementById("decreaseBtn").disabled = quantity <= 1;
-      
-      const maxAllowed = Math.min(maxRemaining, userMaxMint || maxPerWallet);
-      document.getElementById("increaseBtn").disabled = quantity >= maxAllowed;
-      
-      updatePriceDisplay();
-    }
-
-    document.getElementById("decreaseBtn").onclick = () => {
-      if (quantity > 1) {
-        quantity--;
-        updateQuantityButtons();
-      }
-    };
-
-    document.getElementById("increaseBtn").onclick = () => {
-      const maxAllowed = Math.min(maxRemaining, userMaxMint || maxPerWallet);
-      if (quantity < maxAllowed) {
-        quantity++;
-        updateQuantityButtons();
-      }
-    };
+    document.getElementById("decreaseBtn").onclick = () => { if(quantity>1){quantity--; updateQuantityButtons();} };
+    document.getElementById("increaseBtn").onclick = () => { const maxAllowed=Math.min(maxRemaining,userMaxMint||maxPerWallet); if(quantity<maxAllowed){quantity++; updateQuantityButtons();} };
 
     document.getElementById("mintBtn").onclick = async () => {
-      if (!contract) {
-        showStatus("Please connect your wallet first", "error");
-        return;
-      }
-
+      if(!contract) { showStatus("Connect wallet first","error"); return; }
       try {
-        const btn = document.getElementById("mintBtn");
-        btn.disabled = true;
-        btn.innerHTML = 'Minting<span class="spinner"></span>';
-        
+        const btn = document.getElementById("mintBtn"); btn.disabled=true; btn.innerHTML='Minting<span class="spinner"></span>';
         const totalCost = mintPrice.mul(quantity);
-        const priceInfo = mintPrice.isZero() 
-          ? "" 
-          : ` for ${ethers.utils.formatEther(totalCost)} ETH`;
-        showStatus(`Minting ${quantity} NFT${quantity > 1 ? 's' : ''}${priceInfo}...`, "info");
-
-        const tx = await contract.mintSeaDrop(userAddress, quantity, { 
-          value: totalCost 
-        });
-        showStatus("Transaction submitted! Waiting for confirmation...", "info");
-        
+        const tx = await contract.mintSeaDrop(userAddress, quantity, { value: totalCost });
+        showStatus("Transaction submitted...","info");
         const receipt = await tx.wait();
-        
-        showStatus(`Successfully minted ${quantity} NFT${quantity > 1 ? 's' : ''}!`, "success");
-        
-        if (receipt.transactionHash) {
-          const explorerLink = `${HYPEREVM_EXPLORER}/tx/${receipt.transactionHash}`;
-          document.getElementById("nftLinks").innerHTML = 
-            `<a href="${explorerLink}" target="_blank" rel="noopener">View Transaction on Explorer</a>`;
-        }
-
+        showStatus(`Successfully minted ${quantity} NFT${quantity>1?'s':''}!`,"success");
+        if(receipt.transactionHash){ const explorerLink = `${HYPEREVM_EXPLORER}/tx/${receipt.transactionHash}`;
+          document.getElementById("nftLinks").innerHTML = `<a href="${explorerLink}" target="_blank">View on Explorer</a>`;}
+        quantity=1; updateQuantityButtons(); btn.disabled=false; btn.innerHTML='Mint NFT';
         await updateSupplyData();
-        await updateUserData();
-        quantity = 1;
-        updateQuantityButtons();
-        
-        btn.disabled = false;
-        btn.innerHTML = 'Mint NFT';
-      } catch (err) {
-        console.error("Mint error:", err);
-        let errorMsg = "Mint failed";
-        
-        if (err.message && err.message.includes("user rejected")) {
-          errorMsg = "Transaction rejected by user";
-        } else if (err.message && err.message.includes("insufficient funds")) {
-          errorMsg = "Insufficient funds for transaction";
-        } else if (err.data && err.data.message) {
-          errorMsg = err.data.message;
-        } else if (err.message) {
-          errorMsg = err.message;
-        }
-        
-        showStatus(errorMsg, "error");
-        
-        const btn = document.getElementById("mintBtn");
-        btn.disabled = false;
-        btn.innerHTML = 'Mint NFT';
+      } catch(e){ console.error(e); showStatus("Mint failed: "+(e.message||"Unknown"),"error");
+        const btn=document.getElementById("mintBtn"); btn.disabled=false; btn.innerHTML='Mint NFT';
       }
     };
 
-    function showStatus(message, type) {
-      const statusEl = document.getElementById("statusMessage");
-      statusEl.innerText = message;
-      statusEl.className = `status-message ${type}`;
-    }
-
-    function hideStatus() {
-      document.getElementById("statusMessage").className = "status-message";
-    }
-
-    setInterval(() => {
-      updateSupplyData();
-      if (contract && userAddress) {
-        updateUserData();
-      }
-    }, 15000);
+    setInterval(updateSupplyData,15000);
   </script>
 </body>
 </html>
